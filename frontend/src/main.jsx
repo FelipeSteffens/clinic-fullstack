@@ -17,8 +17,8 @@ import DashboardLayout from './layouts/DashboardLayout';
 import MedicalRecordList from './components/MedicalRecordList';
 import RegisterFormPatient from './components/RegisterFormPatient';
 import ConsultationForm from './components/ConsultationForm';
-import ExamsForm from './components/ExamsForm';
-import PatientDetails from './components/PatientDetails';
+import ExamsForm from './components/ExamsForm/Index.jsx';
+import PatientDetails from './components/PatientDetails/Index.jsx';
 import ExamsList from './components/ExamsList';
 
 
