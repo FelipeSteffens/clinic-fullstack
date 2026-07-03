@@ -9,6 +9,6 @@ export default defineConfig({
     path: "src/prisma/migrations",
   },
   datasource: {
-    url: 'postgresql://postgres:senai@3.238.56.78:5432/clinic?schema=public',
+    url: 'postgresql://postgres:senai@localhost:5432/clinic?schema=public',
   },
 });
