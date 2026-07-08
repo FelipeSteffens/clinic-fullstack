@@ -4,8 +4,6 @@ import { toast } from 'react-toastify'
 
 import { useNavigate } from 'react-router'
 
-import axios from 'axios'
-
 // Contexto
 import { useAuth } from '../../contexts/AuthContext'
 

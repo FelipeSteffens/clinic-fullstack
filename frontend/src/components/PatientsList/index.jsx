@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
-import axios from "axios"
 import { FaUserAlt } from 'react-icons/fa'
 import { Link } from "react-router"
+import apiClient from "../../api/api"
 
 const PatientsList = () => {
     const [patients, setPatients] = useState([])
@@ -20,13 +20,19 @@ const PatientsList = () => {
         return age
     }
 
+    const mapPatient = (patient) => ({
+        ...patient,
+        fullName: patient.nome || "",
+        birthdate: patient.data_nascimento || "",
+        phone: patient.telefone || "",
+        healthInsurance: patient.responsavel || "-",
+    })
+
     useEffect(() => {
         const fetchPatients = async () => {
             try {
-                const response = await axios.get("http://localhost:3000/patients")
-                if (!response) return
-
-                const patientsData = response.data
+                const response = await apiClient.get("/paciente")
+                const patientsData = response.data.map(mapPatient)
 
                 // calcula a idade de cada paciente e armazena no estado
 

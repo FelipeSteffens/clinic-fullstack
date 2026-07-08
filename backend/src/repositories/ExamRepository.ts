@@ -65,12 +65,12 @@ export class ExamRepository {
     }
 
     async deletarExame(idExame: number) {
-        const usuario = await prisma.usuario.delete({
+        const exame = await prisma.exame.delete({
             where: {
                 id: idExame
             }
         })
-        return usuario;
+        return exame;
     }
 }
 

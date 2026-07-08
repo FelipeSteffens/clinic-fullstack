@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import axios from 'axios'
 import { toast } from 'react-toastify'
+import apiClient from '../../api/api'
 
 //modal
 
@@ -30,8 +30,13 @@ function ConsultationForm() {
     useEffect(() => {
         const fetchPatients = async () => {
             try {
-                const response = await axios.get("http://localhost:3000/patients")
-                setPatients(response.data)
+                const response = await apiClient.get("/paciente")
+                setPatients(response.data.map((patient) => ({
+                    ...patient,
+                    fullName: patient.nome || "",
+                    phone: patient.telefone || "",
+                    healthInsurance: patient.responsavel || "-",
+                })))
             } catch (error) {
                 console.error("Erro ao obter dados dos pacientes", error)
             }
@@ -98,11 +103,14 @@ function ConsultationForm() {
             setIsSaving(true)
 
             const dataToSave = {
-                patientId: selectedPatient.id,
-                ...formData
+                motivo: formData.reason,
+                data_consulta: new Date(`${formData.date}T${formData.time}`).toISOString(),
+                observacoes: formData.description,
+                medico_responsavel_id: 1,
+                paciente_id: selectedPatient.id,
             }
 
-            await axios.post("http://localhost:3000/consults", dataToSave)
+            await apiClient.post("/consulta", dataToSave)
 
             toast.success("Consulta cadastrada com sucesso!", {
                 autoClose: 2000,
@@ -113,7 +121,7 @@ function ConsultationForm() {
             handleCloseModal()
 
         } catch (error) {
-            console.error("Erro ao cadastrar consulta!")
+            console.error("Erro ao cadastrar consulta!", error)
             toast.error("Erro ao cadastrar consulta!", {
                 autoClose: 2000,
                 hideProgressBar: true

@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { toast } from 'react-toastify'
 
-import axios from 'axios'
 import apiClient from '../../api/api'
 
 const RegisterUser = () => {

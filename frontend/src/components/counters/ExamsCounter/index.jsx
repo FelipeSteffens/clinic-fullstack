@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 import { FaCalendarPlus } from 'react-icons/fa'
 import apiClient from '../../../api/api'
 

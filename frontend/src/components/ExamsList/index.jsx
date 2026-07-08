@@ -1,154 +1,175 @@
 import { useState, useEffect } from 'react'
-
-import { useParams } from 'react-router'
+import { FaCalendarAlt, FaChevronLeft, FaChevronRight, FaFileMedical, FaSearch } from 'react-icons/fa'
 import apiClient from '../../api/api'
-
 
 const ExamsList = () => {
     const [page, setPage] = useState(1)
-    const [exams, setExams] = useState()
-    const [total, setTotal] = useState()
-    const [totalPagina, setTotalPagina] = useState()
+    const [exams, setExams] = useState([])
+    const [total, setTotal] = useState(0)
+    const [totalPagina, setTotalPagina] = useState(0)
+    const [searchTerm, setSearchTerm] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
     const limite = 10
+
     useEffect(() => {
-        const fethExames = async () => {
+        const fetchExames = async () => {
             try {
+                setIsLoading(true)
                 const response = await apiClient.get(`/exames?pagina=${page}&limite=${limite}`)
-                if (response.data) {
-                    setExams(response.data.exames)
-                    setTotal(response.data.total)
-                    setTotalPagina(response.data.totalPaginas)
-                }
+                setExams(response.data.exames || [])
+                setTotal(response.data.total || 0)
+                setTotalPagina(response.data.totalPaginas || 0)
             } catch (error) {
                 console.error("Erro ao listar exames", error)
+            } finally {
+                setIsLoading(false)
             }
         }
-        fethExames()
+
+        fetchExames()
     }, [page])
 
+    const filteredExams = exams.filter((exam) => (
+        [
+            exam.tipo_exame,
+            exam.descricao,
+            exam.resultado,
+            exam.valor,
+            exam.id,
+        ]
+            .join(' ')
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
+    ))
+
+    const formatDate = (date) => {
+        if (!date) return '-'
+        const parsedDate = new Date(date)
+        if (Number.isNaN(parsedDate.getTime())) return '-'
+        return parsedDate.toLocaleDateString('pt-BR')
+    }
+
+    const startResult = total === 0 ? 0 : ((page - 1) * limite) + 1
+    const endResult = Math.min(limite * page, total)
+
     return (
-        <>
+        <section className="bg-white shadow rounded-2xl p-6 mt-8 text-gray-800">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+                <div>
+                    <h2 className="text-xl font-semibold text-cyan-800">Lista de exames</h2>
+                    <p className="text-sm text-gray-600 mt-1">Acompanhe os exames cadastrados no sistema</p>
+                </div>
 
-        <div className="bg-white shadow rounded-2xl p-6 mt-8">
-            <h2 className="text-xl font-semibold text-cyan-800 mb-4">
-                Informações Rápidas de Pacientes
-            </h2>
-
-            {/* Campo de busca */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-                <label htmlFor="search" className="text-gray-700 font-medium">
-                    Buscar Paciente:
-                </label>
-                <input
-                    type="text"
-                    id="search"
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    placeholder="Digite o nome, email ou telefone"
-                    className="border rounded-lg px-3 py-2 w-full sm:w-80 focus:ring-2 focus:ring-cyan-600 outline-none"
-
-                />
+                <div className="flex items-center gap-2 bg-cyan-50 text-cyan-800 px-4 py-2 rounded-lg">
+                    <FaFileMedical />
+                    <span className="font-semibold">{total}</span>
+                    <span className="text-sm">exames</span>
+                </div>
             </div>
 
-            {/* Lista de pacientes */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+                <label htmlFor="search-exams" className="text-gray-700 font-medium">
+                    Buscar exame:
+                </label>
+                <div className="relative w-full sm:w-80">
+                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                        type="text"
+                        id="search-exams"
+                        value={searchTerm}
+                        onChange={(event) => setSearchTerm(event.target.value)}
+                        placeholder="Digite tipo, descricao ou resultado"
+                        className="border rounded-lg pl-10 pr-3 py-2 w-full focus:ring-2 focus:ring-cyan-600 outline-none"
+                    />
+                </div>
+            </div>
 
-            {
-                filteredPatients.length > 0 ? (
-                    <ul className="divide-y divide-gray-200">
-                        {
-                            filteredPatients.map((patient) => (
-                                <li
-                                    key={patient.id}
-                                    className="flex flex-col sm:flex-row sm:items-center justify-between py-4"
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className="bg-cyan-100 text-cyan-700 p-3 rounded-full">
-                                            <FaUserAlt size={20} />
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-gray-800">{patient.fullName}</p>
-                                            <p className="text-sm text-gray-600">{patient.email}</p>
-                                            <p className="text-sm text-gray-600">{patient.phone}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="text-sm text-gray-600 mt-2 sm:mt-0 text-right">
-                                        <p><strong>Idade:</strong>{ages[patient.id] || "-"} anos</p>
-                                        <p><strong>Plano:</strong>{patient.healthInsurance || "-"}</p>
-                                        <Link
-                                            to={`/paciente/${patient.id}`}
-                                            className="text-cyan-700 font-semibold hover:underline"
-                                        >
-                                            Ver detalhes
-                                        </Link>
-                                    </div>
-
-                                </li>
-                            ))
-
-                        }
-                    </ul>
-                ) : (
-                    <p className="text-gray-500 text-center py-6">
-                        Nenhum paciente encontrado
-                    </p>
-                )
-            }
-
-        </div>
-
-
-
-
-
-        
-            <div>Lista de exames</div>
-            {
-                exams?.length ? (
-                    <>
-                        <table>
+            {isLoading ? (
+                <p className="text-gray-500 text-center py-6">Carregando exames...</p>
+            ) : filteredExams.length ? (
+                <>
+                    <div className="overflow-x-auto border rounded-lg">
+                        <table className="w-full">
                             <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Tipo de Exame</th>
-                                    <th>Descrição</th>
-                                    <th>Data do Exame</th>
-                                    <th>Valor</th>
-                                    <th>Resultado</th>
+                                <tr className="bg-cyan-700 text-white text-sm">
+                                    <th className="p-3 text-left">Registro</th>
+                                    <th className="p-3 text-left">Tipo de Exame</th>
+                                    <th className="p-3 text-left">Descricao</th>
+                                    <th className="p-3 text-left">Data do Exame</th>
+                                    <th className="p-3 text-left">Valor</th>
+                                    <th className="p-3 text-left">Resultado</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {exams.map((exame) => (
-                                    <tr>
-                                        <td>{exame.id}</td>
-                                        <td>{exame.tipo_exame}</td>
-                                        <td>{exame.descricao}</td>
-                                        <td>{exame.data_exame}</td>
-                                        <td>{exame.valor}</td>
-                                        <td><em>{exame.resultado}</em></td>
+                                {filteredExams.map((exame) => (
+                                    <tr key={exame.id} className="border-b last:border-b-0 hover:bg-cyan-50 transition">
+                                        <td className="p-3 text-sm text-gray-600">#{exame.id}</td>
+                                        <td className="p-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="bg-cyan-100 text-cyan-700 p-2 rounded-full">
+                                                    <FaFileMedical size={16} />
+                                                </div>
+                                                <span className="font-semibold text-gray-800">{exame.tipo_exame || '-'}</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-3 text-sm text-gray-600 max-w-xs">
+                                            <span className="line-clamp-2">{exame.descricao || '-'}</span>
+                                        </td>
+                                        <td className="p-3 text-sm text-gray-600">
+                                            <span className="inline-flex items-center gap-2">
+                                                <FaCalendarAlt className="text-cyan-700" />
+                                                {formatDate(exame.data_exame)}
+                                            </span>
+                                        </td>
+                                        <td className="p-3 text-sm text-gray-600">{exame.valor || '-'}</td>
+                                        <td className="p-3 text-sm text-gray-600 max-w-xs">
+                                            <span className="line-clamp-2">{exame.resultado || '-'}</span>
+                                        </td>
                                     </tr>
                                 ))}
-
                             </tbody>
                         </table>
-                        <div className='flex gap-5 items-center justify-center'>
-                            <span>Resultado {limite * page} de {total}</span>
+                    </div>
+
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-2">
+                        <span className="text-sm text-gray-600">Resultado {startResult} a {endResult} de {total}</span>
+                        <div className="flex gap-2 items-center justify-center">
+                            <button
+                                onClick={() => setPage((currentPage) => Math.max(currentPage - 1, 1))}
+                                disabled={page === 1}
+                                className="p-2 rounded-lg border text-cyan-700 hover:bg-cyan-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                aria-label="Pagina anterior"
+                            >
+                                <FaChevronLeft />
+                            </button>
+
                             {Array.from(Array(totalPagina)).map((_, i) => (
-                                <button 
-                                    onClick={() => {
-                                        setPage(i + 1)
-                                    }}
-                                    className={` px-2 py-1 ${i + 1 == page ? "bg-cyan-950" : "bg-cyan-600"}  cursor-pointer text-white rounded-lg`}>
+                                <button
+                                    key={i + 1}
+                                    onClick={() => setPage(i + 1)}
+                                    className={`min-w-9 px-3 py-2 ${i + 1 === page ? "bg-cyan-800" : "bg-cyan-600"} cursor-pointer text-white rounded-lg hover:bg-cyan-700 transition`}
+                                >
                                     {i + 1}
                                 </button>
                             ))}
+
+                            <button
+                                onClick={() => setPage((currentPage) => Math.min(currentPage + 1, totalPagina))}
+                                disabled={page === totalPagina}
+                                className="p-2 rounded-lg border text-cyan-700 hover:bg-cyan-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                aria-label="Proxima pagina"
+                            >
+                                <FaChevronRight />
+                            </button>
                         </div>
-                    </>
-                ) : (
-                    <span>Sem dados!</span>
-                )
-            }
-        </>
+                    </div>
+                </>
+            ) : (
+                <p className="text-gray-500 text-center py-6">
+                    Nenhum exame encontrado
+                </p>
+            )}
+        </section>
     )
 }
 

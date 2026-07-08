@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router";
-import axios from "axios";
+import apiClient from "../../api/api";
 
 const MedicalRecordList = () => {
   const [patients, setPatients] = useState([]);
@@ -9,8 +9,12 @@ const MedicalRecordList = () => {
   useEffect(() => {
     const fetchPatients = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/patients");
-        setPatients(response.data);
+        const response = await apiClient.get("/paciente");
+        setPatients(response.data.map((patient) => ({
+          ...patient,
+          fullName: patient.nome || "",
+          healthInsurance: patient.responsavel || "-",
+        })));
       } catch (error) {
         console.error("Erro ao obter dados dos pacientes:", error);
       }

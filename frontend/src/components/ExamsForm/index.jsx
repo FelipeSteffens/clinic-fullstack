@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import apiClient from "../../api/api";
 
 import Modal from "../Modal";
 
@@ -22,19 +22,25 @@ const ExamsForm = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Buscar pacientes ao carregar o componente
-    // useEffect(() => {
-    //     fetchPatients();
-    // }, []);
+    useEffect(() => {
+        const fetchPatients = async () => {
+            try {
+                const response = await apiClient.get("/paciente");
+                const patientsData = response.data.map((patient) => ({
+                    ...patient,
+                    fullName: patient.nome || "",
+                    phone: patient.telefone || "",
+                    healthInsurance: patient.responsavel || "-",
+                }));
+                setPatients(patientsData);
+                setFilteredPatients(patientsData);
+            } catch (error) {
+                console.error("Erro ao obter dados dos pacientes:", error);
+            }
+        };
 
-    // const fetchPatients = async () => {
-    //     try {
-    //         const response = await axios.get("http://localhost:3000/patients");
-    //         setPatients(response.data);
-    //         setFilteredPatients(response.data);
-    //     } catch (error) {
-    //         console.error("Erro ao obter dados dos pacientes:", error);
-    //     }
-    // };
+        fetchPatients();
+    }, []);
 
     const handleSearchChange = (event) => {
         const searchTerm = event.target.value.toLowerCase();
@@ -83,11 +89,15 @@ const ExamsForm = () => {
         try {
             setIsSaving(true);
             const examToAdd = {
-                ...examData,
-                patientId: selectedPatient.id,
+                tipo_exame: examData.type || examData.name,
+                valor: "0",
+                descricao: examData.laboratory || examData.name,
+                resultado: examData.results,
+                data_exame: new Date(`${examData.date}T${examData.time}`).toISOString(),
+                paciente_id: selectedPatient.id,
             };
 
-            await axios.post("http://localhost:3000/exames", examToAdd);
+            await apiClient.post("/exames", examToAdd);
             toast.success("Exame cadastrado com sucesso!", {
                 position: "top-right",
                 autoClose: 2000,
